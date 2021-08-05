@@ -1,5 +1,5 @@
 package csObject 
-type csPostfix struct{
+type Postfix struct{
 	Status		string 	`json:"postfix_status"`
   	Size		string 	`json:"postfix_size"`
   	Position	string 	`json:"postfix_position"`
