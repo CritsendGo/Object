@@ -7,5 +7,5 @@ type csPostfix struct{
   	Signature	string 	`json:"postfix_signature"`,
   	Server_id	string 	`json:"server_id"`,
   	Id	      	string 	`json:"postfix_id"`,
-  	Path	    string 	`json:"postfix_path"`
+  	Path	    	string 	`json:"postfix_path"`
 }
