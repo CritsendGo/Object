@@ -1,1 +1,3 @@
-module "github.com/CritsendGo/Object"
+module github.com/CritsendGo/Object
+
+go 1.15
