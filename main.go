@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	A "github.com/CritsendTeam/ApiClient"
+	A "github.com/CritsendGo/ApiClient"
 )
 
 
