@@ -5,56 +5,55 @@ import (
 	"errors"
 	"fmt"
 
+	A "github.com/CritsendGo/ApiClient"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
-	A "github.com/CritsendGo/ApiClient"
 )
-
-
-
-
-
 
 var ApiToken string
-var apiClient =A.NewClient("")
-type objectStatus struct{
-	Name 	string
-	IsSave  bool
+var apiClient = A.NewClient("")
+
+type objectStatus struct {
+	Name   string
+	IsSave bool
 }
+
 var (
-	oStatusNew 	= objectStatus{ "New",false}
-	oStatusSaved = objectStatus{ "Saved",true}
-	oStatusUpdated 	= objectStatus{ "Updated",false}
+	oStatusNew     = objectStatus{"New", false}
+	oStatusSaved   = objectStatus{"Saved", true}
+	oStatusUpdated = objectStatus{"Updated", false}
 )
 
 var (
-	ErrorEmptyToken = errors.New("No token set on ApiToken")
-	ErrorJsonUnFormat= errors.New("Unable to set json from the object")
+	ErrorEmptyToken   = errors.New("No token set on ApiToken")
+	ErrorJsonUnFormat = errors.New("Unable to set json from the object")
 )
 
 func FromJson(f json.RawMessage) {
 	// Retrieve tag format to set the good format into the struct
 }
-func checkOrSetToken(){
-	if ApiToken ==""{
+func checkOrSetToken() {
+	if ApiToken == "" {
 		fmt.Println("No token")
 	}
-	if apiClient.Token ==""{
-		apiClient.Token=ApiToken
+	if apiClient.Token == "" {
+		apiClient.Token = ApiToken
 	}
 }
 
-func Save(o interface{}) error{
+func Save(o interface{}) error {
 	SaveObject(o)
 	return nil
 }
-func Get(o interface{}) error{
+func Get(o interface{}) error {
 	checkOrSetToken()
-	status:=CheckObject(o)
-	if status =="OPTIONAL"{return errors.New("all non optional field is not set")}
-	if status =="UNKNOWN"{
+	status := CheckObject(o)
+	if status == "OPTIONAL" {
+		return errors.New("all non optional field is not set")
+	}
+	if status == "UNKNOWN" {
 		// Primary is not set get by its non optional
 		return GetByNonOptional(o)
 	}
@@ -65,133 +64,138 @@ func Get(o interface{}) error{
 	//data:=MapToObject(result,o)
 
 }
-func CheckObject(o interface{}) string{
+func CheckObject(o interface{}) string {
 	// Used to check that all fields with optional = false is not empty
 	// Return :
 	//	- Error : If all field is not set
 	//  - Unknown : If all field is ok but primary empty
 	//  - Ok : If primary and optional is ok
-	oValue:= reflect.ValueOf(o)
-	oModel:= reflect.TypeOf(o)
-	oOrigin:=oValue
+	oValue := reflect.ValueOf(o)
+	oModel := reflect.TypeOf(o)
+	oOrigin := oValue
 	if oValue.Kind() == reflect.Ptr {
 		oValue = oValue.Elem()
 	}
 	var isOkOptional = false
 	var isOkPrimary = false
 	for i := 0; i < oModel.Elem().NumField(); i++ {
-		isPrimary,_ := strconv.ParseBool(oModel.Elem().Field(i).Tag.Get("oPrimary"))
-		isOptional,_ := strconv.ParseBool(oModel.Elem().Field(i).Tag.Get("oOptional"))
-		fieldValue:=strings.TrimSpace(fmt.Sprint(oOrigin.Elem().Field(i)))
-		if isPrimary== true && fieldValue!="0" {isOkPrimary=true}
-		if isOptional== false && len(fieldValue)>0 {isOkOptional=true}
+		isPrimary, _ := strconv.ParseBool(oModel.Elem().Field(i).Tag.Get("oPrimary"))
+		isOptional, _ := strconv.ParseBool(oModel.Elem().Field(i).Tag.Get("oOptional"))
+		fieldValue := strings.TrimSpace(fmt.Sprint(oOrigin.Elem().Field(i)))
+		if isPrimary == true && fieldValue != "0" {
+			isOkPrimary = true
+		}
+		if isOptional == false && len(fieldValue) > 0 {
+			isOkOptional = true
+		}
 	}
-	if isOkOptional ==false {return "OPTIONAL"}
-	if isOkPrimary ==false {return "UNKNOWN"}
+	if isOkOptional == false {
+		return "OPTIONAL"
+	}
+	if isOkPrimary == false {
+		return "UNKNOWN"
+	}
 	return "OK"
 }
 
-func GetById(o interface{}) error{
+func GetById(o interface{}) error {
 
 	return nil
 }
-func GetByNonOptional(o interface{}) error{
-	oValue:= reflect.ValueOf(o)
-	oModel:= reflect.TypeOf(o)
-	apiBrut:=fmt.Sprint(reflect.TypeOf(o))
-	apiName:=strings.ToLower(strings.Replace(strings.Replace(apiBrut,"csObject.","",1),"*","",1))
-	oOrigin:=oValue
+func GetByNonOptional(o interface{}) error {
+	oValue := reflect.ValueOf(o)
+	oModel := reflect.TypeOf(o)
+	apiBrut := fmt.Sprint(reflect.TypeOf(o))
+	apiName := strings.ToLower(strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1))
+	oOrigin := oValue
 	if oValue.Kind() == reflect.Ptr {
 		oValue = oValue.Elem()
 	}
-	search:= make(map[string]string)
+	search := make(map[string]string)
 
 	for i := 0; i < oModel.Elem().NumField(); i++ {
-		isOptional,_ := strconv.ParseBool(oModel.Elem().Field(i).Tag.Get("oOptional"))
+		isOptional, _ := strconv.ParseBool(oModel.Elem().Field(i).Tag.Get("oOptional"))
 		tagType := oModel.Elem().Field(i).Tag.Get("oType")
 		tagName := strings.Split(oModel.Elem().Field(i).Tag.Get("json"), ",omit")[0]
-		fieldValue:=strings.TrimSpace(fmt.Sprint(oOrigin.Elem().Field(i)))
-		if tagType=="struct"{
-			fmt.Println(fieldValue)
-			if fieldValue != "<nil>"{
-				fieldValue=strings.TrimSpace(fmt.Sprint(oOrigin.Elem().Field(i).Elem().Field(0)))
-			}else{
-				fieldValue=""
+		fieldValue := strings.TrimSpace(fmt.Sprint(oOrigin.Elem().Field(i)))
+		if tagType == "struct" {
+			if fieldValue != "<nil>" {
+				fieldValue = strings.TrimSpace(fmt.Sprint(oOrigin.Elem().Field(i).Elem().Field(0)))
+			} else {
+				fieldValue = ""
 			}
 		}
 
-		if isOptional== false {
-			search[tagName]=fieldValue
+		if isOptional == false {
+			search[tagName] = fieldValue
 		}
 	}
 	var mapField []string
-	for name,value:=range search{
-		mapField=append(mapField,name+"="+value)
+	for name, value := range search {
+		mapField = append(mapField, name+"="+value)
 	}
-	path:=apiName+"/?"+strings.Join(mapField,"&")
-	result,e:=apiClient.Get(path)
-	if e!=nil {
+	path := apiName + "/?" + strings.Join(mapField, "&")
+	result, e := apiClient.Get(path)
+	if e != nil {
 		// Not found need to be save
 		return e
 	}
-	if len(result)!=1{
+	if len(result) != 1 {
 		return errors.New("too many result from the non optional value")
 	}
-	data:=result[0]
-	return MapToObject(data,o)
+	data := result[0]
+	return MapToObject(data, o)
 
 }
 
-
-func MapToObject(a map[string]string,o interface{}) error{
-	model:=reflect.TypeOf(o)
+func MapToObject(a map[string]string, o interface{}) error {
+	model := reflect.TypeOf(o)
 	reflect.New(model)
-	oValue:= reflect.ValueOf(o)
+	oValue := reflect.ValueOf(o)
 	if oValue.Kind() == reflect.Ptr {
 		oValue = oValue.Elem()
 	}
-		for fieldName, fieldValue := range a {
-			for i := 0; i < model.Elem().NumField(); i++ {
-				tagName := strings.Split(model.Elem().Field(i).Tag.Get("json"), ",omit")[0]
-				tagType := model.Elem().Field(i).Tag.Get("oType")
-				if tagName == fieldName {
-					if tagType == "string" {
+	for fieldName, fieldValue := range a {
+		for i := 0; i < model.Elem().NumField(); i++ {
+			tagName := strings.Split(model.Elem().Field(i).Tag.Get("json"), ",omit")[0]
+			tagType := model.Elem().Field(i).Tag.Get("oType")
+			if tagName == fieldName {
+				if tagType == "string" {
 
-						oValue.Field(i).SetString(fieldValue)
-					}
-					if tagType == "int" {
-
-						b,_:=strconv.Atoi(fieldValue)
-						oValue.Field(i).SetInt(int64(b))
-					}
-					if tagType == "time" {
-						f,_:=time.Parse("2006-01-02 15:04:05",fieldValue)
-						oValue.Field(i).Set(reflect.ValueOf(f))
-					}
+					oValue.Field(i).SetString(fieldValue)
+				}
+				if tagType == "int" {
+					b, _ := strconv.Atoi(fieldValue)
+					oValue.Field(i).SetInt(int64(b))
+				}
+				if tagType == "time" {
+					f, _ := time.Parse("2006-01-02 15:04:05", fieldValue)
+					oValue.Field(i).Set(reflect.ValueOf(f))
 				}
 			}
 		}
+	}
 	return nil
 }
 
-func SaveObject(f interface{}) (e error){
-	apiBrut:=fmt.Sprint(reflect.TypeOf(f))
-	apiName:=strings.ToLower(strings.Replace(strings.Replace(apiBrut,"csObject.","",1),"*","",1))
-	fmt.Print(apiName)
-	if ApiToken ==""{
+func SaveObject(f interface{}) (e error) {
+	apiBrut := fmt.Sprint(reflect.TypeOf(f))
+	apiName := strings.ToLower(strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1))
+
+	if ApiToken == "" {
 		return ErrorEmptyToken
 	}
-	if apiClient.Token ==""{
-		apiClient.Token=ApiToken
+	if apiClient.Token == "" {
+		apiClient.Token = ApiToken
 	}
-	jsonString,err:=ToJson(f)
-	if err!=nil {
+	jsonString, err := ToJson(f)
+	if err != nil {
 		return ErrorJsonUnFormat
 	}
-	fmt.Println(jsonString)
-	apiClient.Insert(apiName,jsonString)
-
-	v:=int64(4)
+	body := "[" + jsonString + "]"
+	mapping, err := apiClient.Insert(apiName, body)
+	/*id,_:=strconv.Atoi(mapping[0][apiName+"_id"])
+	v:=int64(id)
 	g:=reflect.ValueOf(f)
 	if g.Kind() == reflect.Ptr {
 		g = g.Elem()
@@ -201,13 +205,14 @@ func SaveObject(f interface{}) (e error){
 			g.Field(i).SetInt(v)
 		}
 	}
-	return nil
+	return
+	*/
+	return MapToObject(mapping[0], f)
 }
 
-
-func ToJson (f interface{}) (string, error) {
-	g:=reflect.ValueOf(f)
-	oModel:=reflect.TypeOf(f)
+func ToJson(f interface{}) (string, error) {
+	g := reflect.ValueOf(f)
+	oModel := reflect.TypeOf(f)
 	if g.Kind() == reflect.Ptr {
 		g = g.Elem()
 	}
@@ -215,49 +220,50 @@ func ToJson (f interface{}) (string, error) {
 	for i := 0; i < oModel.Elem().NumField(); i++ {
 		tagType := oModel.Elem().Field(i).Tag.Get("oType")
 		tagName := strings.Split(oModel.Elem().Field(i).Tag.Get("json"), ",omit")[0]
-		fieldValue:=""
-		if tagType=="struct"{
-			fieldValue=fmt.Sprint(g.Field(i).Elem().Field(0))
-			jsonMap[tagName]=fieldValue
-		}else if tagType=="time"{
-			timeVal:=strings.Split(fmt.Sprint(g.Field(i)), " m=")[0]
-			timeFormat:="2006-01-02 15:04:05.999999999 -0700 MST"
-			r,_:=time.Parse(timeFormat,timeVal)
-			timeString:=r.Format("2006-01-02 15:04:05")
-			if timeString=="0001-01-01 00:00:00" {
-				timeString=time.Now().Format("2006-01-02 15:04:05")
+		fieldValue := ""
+		if tagType == "struct" {
+			if g.Field(i).Elem().Kind() != reflect.Invalid {
+				fieldValue = fmt.Sprint(g.Field(i).Elem().Field(0))
+				jsonMap[tagName] = fieldValue
 			}
-			fieldValue=timeString
-			jsonMap[tagName]=fieldValue
 
-		}else if tagType=="string"{
-			fieldValue=g.Field(i).String()
-			if fieldValue!="" {
+		} else if tagType == "time" {
+			timeVal := strings.Split(fmt.Sprint(g.Field(i)), " m=")[0]
+			timeFormat := "2006-01-02 15:04:05.999999999 -0700 MST"
+			r, _ := time.Parse(timeFormat, timeVal)
+			timeString := r.Format("2006-01-02 15:04:05")
+			if timeString == "0001-01-01 00:00:00" {
+				timeString = time.Now().Format("2006-01-02 15:04:05")
+			}
+			fieldValue = timeString
+			jsonMap[tagName] = fieldValue
+
+		} else if tagType == "string" {
+			fieldValue = g.Field(i).String()
+			if fieldValue != "" {
 				jsonMap[tagName] = fieldValue
 			}
-		}else if tagType=="int"{
-			dd,_:=strconv.Atoi(g.Field(i).String())
-			if dd!=0 {
+		} else if tagType == "int" {
+			fieldValue := fmt.Sprint(g.Field(i))
+			if fieldValue != "0" {
 				jsonMap[tagName] = fieldValue
 			}
+
 		}
-
 
 	}
 
-	fmt.Println(jsonMap)
-	jsonString,_:=json.Marshal(jsonMap)
-	return string(jsonString),nil
+	jsonString, _ := json.Marshal(jsonMap)
+	return string(jsonString), nil
 }
-func IsSubStruct(g interface{}) bool{
-	numFields :=  reflect.TypeOf(g).NumField()
+func IsSubStruct(g interface{}) bool {
+	numFields := reflect.TypeOf(g).NumField()
 	for i := 0; i < numFields; i++ {
 		if reflect.ValueOf(g).Field(i).Kind() == reflect.Struct {
-			if  reflect.TypeOf(g).Field(i).Name!="status"{
+			if reflect.TypeOf(g).Field(i).Name != "status" {
 				return true
 			}
 		}
 	}
 	return false
 }
-
