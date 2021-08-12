@@ -175,6 +175,8 @@ func GetAll(o interface{}) (i []interface{}) {
 		err := MapToObject(res, newO)
 		if err != nil {
 			i = append(i, newO)
+		} else {
+			fmt.Println(err)
 		}
 	}
 	return i
