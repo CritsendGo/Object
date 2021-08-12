@@ -4,12 +4,12 @@ import (
 	"time"
 )
 
-//Domain    *Domain  `json:"message_id" oType:"struct" oPrimary:"false" oOptional:"false"`
+//
 
 type Certificate struct {
 	//Key
-	Id     int `json:"certificate_id" oType:"int" oPrimary:"true" oOptional:"true"`
-	Domain int `json:"domain_id" oType:"int" oPrimary:"false" oOptional:"false"`
+	Id     int     `json:"certificate_id" oType:"int" oPrimary:"true" oOptional:"true"`
+	Domain *Domain `json:"domain_id" oType:"struct" oPrimary:"false" oOptional:"false"`
 	//Data
 	Key   string `json:"certificate_key" oType:"string" oPrimary:"false" oOptional:"true"`
 	Pem   string `json:"certificate_pem" oType:"string" oPrimary:"false" oOptional:"true"`
