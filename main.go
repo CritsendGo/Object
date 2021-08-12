@@ -171,6 +171,7 @@ func GetAll(o interface{}) (i []interface{}) {
 		return
 	}
 	for _, res := range result {
+		fmt.Println(res)
 		newO := reflect.New(reflect.TypeOf(o))
 		err := MapToObject(res, newO)
 		if err != nil {
