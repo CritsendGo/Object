@@ -167,6 +167,7 @@ func GetAll(o interface{}) (i []interface{}) {
 		return i
 	}
 	if len(result) < 1 {
+		fmt.Println("No result ", e)
 		return
 	}
 	for _, res := range result {
