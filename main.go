@@ -156,6 +156,7 @@ func GetByNonOptional(o interface{}) error {
 }
 
 func GetAll(o interface{}) (i []interface{}) {
+	checkOrSetToken()
 	apiBrut := fmt.Sprint(reflect.TypeOf(o))
 	apiName := strings.ToLower(strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1))
 	path := apiName + "/"
