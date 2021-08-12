@@ -103,7 +103,6 @@ func GetById(o interface{}) error {
 	return nil
 }
 func GetByNonOptional(o interface{}) error {
-
 	oValue := reflect.ValueOf(o)
 	oModel := reflect.TypeOf(o)
 	apiBrut := fmt.Sprint(reflect.TypeOf(o))
@@ -154,6 +153,30 @@ func GetByNonOptional(o interface{}) error {
 	//mt.Print(o)
 	return err
 
+}
+
+func GetAll(o interface{}) (i []interface{}) {
+	apiBrut := fmt.Sprint(reflect.TypeOf(o))
+	apiName := strings.ToLower(strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1))
+	path := apiName + "/"
+	//fmt.Println("GET ",apiName,path)
+	result, e := apiClient.Get(path)
+	if e != nil {
+		// Not found need to be save
+		fmt.Println("Error in apiclient get ", e)
+		return i
+	}
+	if len(result) < 1 {
+		return
+	}
+	for _, res := range result {
+		newO := reflect.New(reflect.TypeOf(o))
+		err := MapToObject(res, newO)
+		if err != nil {
+			i = append(i, newO)
+		}
+	}
+	return i
 }
 
 func MapToObject(a map[string]string, o interface{}) error {
