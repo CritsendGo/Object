@@ -103,10 +103,12 @@ func GetById(o interface{}) error {
 	return nil
 }
 func GetByNonOptional(o interface{}) error {
+
 	oValue := reflect.ValueOf(o)
 	oModel := reflect.TypeOf(o)
 	apiBrut := fmt.Sprint(reflect.TypeOf(o))
 	apiName := strings.ToLower(strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1))
+
 	oOrigin := oValue
 	if oValue.Kind() == reflect.Ptr {
 		oValue = oValue.Elem()
@@ -135,16 +137,22 @@ func GetByNonOptional(o interface{}) error {
 		mapField = append(mapField, name+"="+value)
 	}
 	path := apiName + "/?" + strings.Join(mapField, "&")
+	//fmt.Println("GET ",apiName,path)
 	result, e := apiClient.Get(path)
+
 	if e != nil {
 		// Not found need to be save
+		fmt.Println("Error in apiclient get ", e)
 		return e
 	}
 	if len(result) != 1 {
 		return errors.New("too many result from the non optional value")
 	}
 	data := result[0]
-	return MapToObject(data, o)
+	//fmt.Println(data)
+	err := MapToObject(data, o)
+	//mt.Print(o)
+	return err
 
 }
 
@@ -161,11 +169,11 @@ func MapToObject(a map[string]string, o interface{}) error {
 			tagType := model.Elem().Field(i).Tag.Get("oType")
 			if tagName == fieldName {
 				if tagType == "string" {
-
 					oValue.Field(i).SetString(fieldValue)
 				}
 				if tagType == "int" {
 					b, _ := strconv.Atoi(fieldValue)
+
 					oValue.Field(i).SetInt(int64(b))
 				}
 				if tagType == "time" {
@@ -181,8 +189,9 @@ func MapToObject(a map[string]string, o interface{}) error {
 func SaveObject(f interface{}) (e error) {
 	apiBrut := fmt.Sprint(reflect.TypeOf(f))
 	apiName := strings.ToLower(strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1))
-
+	//fmt.Println(apiName,"POST")
 	if ApiToken == "" {
+		fmt.Println("No token")
 		return ErrorEmptyToken
 	}
 	if apiClient.Token == "" {
@@ -190,9 +199,11 @@ func SaveObject(f interface{}) (e error) {
 	}
 	jsonString, err := ToJson(f)
 	if err != nil {
+		fmt.Println("Unable to set JSon")
 		return ErrorJsonUnFormat
 	}
 	body := "[" + jsonString + "]"
+	//fmt.Println(apiName,"POST",body)
 	mapping, err := apiClient.Insert(apiName, body)
 	/*id,_:=strconv.Atoi(mapping[0][apiName+"_id"])
 	v:=int64(id)
