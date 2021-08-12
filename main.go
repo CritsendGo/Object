@@ -160,6 +160,7 @@ func GetAll(o interface{}) (i []interface{}) {
 	apiName := strings.ToLower(strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1))
 	path := apiName + "/"
 	//fmt.Println("GET ",apiName,path)
+	fmt.Println(path)
 	result, e := apiClient.Get(path)
 	if e != nil {
 		// Not found need to be save
