@@ -8,8 +8,8 @@ import (
 
 type Domain struct {
 	//Key
-	Id    int    `json:"domain_id" oType:"int" oPrimary:"true" oOptional:"true"`
-	Value string `json:"domain_name" oType:"int" oPrimary:"false" oOptional:"false"`
+	Id   int    `json:"domain_id" oType:"int" oPrimary:"true" oOptional:"true"`
+	Name string `json:"domain_name" oType:"int" oPrimary:"false" oOptional:"false"`
 	//Data
 	Key   string `json:"certificate_key" oType:"string" oPrimary:"false" oOptional:"true"`
 	Pem   string `json:"certificate_pem" oType:"string" oPrimary:"false" oOptional:"true"`
