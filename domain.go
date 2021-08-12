@@ -11,12 +11,9 @@ type Domain struct {
 	Id   int    `json:"domain_id" oType:"int" oPrimary:"true" oOptional:"true"`
 	Name string `json:"domain_name" oType:"string" oPrimary:"false" oOptional:"false"`
 	//Data
-	Key   string `json:"certificate_key" oType:"string" oPrimary:"false" oOptional:"true"`
-	Pem   string `json:"certificate_pem" oType:"string" oPrimary:"false" oOptional:"true"`
-	Chain string `json:"certificate_chain" oType:"string" oPrimary:"false" oOptional:"true"`
 	// Timer
-	Create time.Time `json:"certificate_create" oType:"time" oPrimary:"false" oOptional:"true"`
-	Update time.Time `json:"certificate_update" oType:"time" oPrimary:"false" oOptional:"true"`
+	Create time.Time `json:"domain_create" oType:"time" oPrimary:"false" oOptional:"true"`
+	Update time.Time `json:"domain_update" oType:"time" oPrimary:"false" oOptional:"true"`
 }
 
 func (o *Domain) Load() error { return Get(o) }
