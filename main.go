@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	A "github.com/CritsendGo/ApiClient"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+	_ "unsafe"
 )
 
 var ApiToken string
@@ -99,8 +99,31 @@ func CheckObject(o interface{}) string {
 }
 
 func GetById(o interface{}) error {
+	oValue := reflect.ValueOf(o)
+	apiBrut := fmt.Sprint(reflect.TypeOf(o))
+	apiName := strings.ToLower(strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1))
 
-	return nil
+	if oValue.Kind() == reflect.Ptr {
+		oValue = oValue.Elem()
+	}
+	id := fmt.Sprint(oValue.FieldByName("Id"))
+	path := apiName + "/?" + apiName + "_id=" + id
+	//fmt.Println("GET ",apiName,path)
+	result, e := apiClient.Get(path)
+	//fmt.Println(result)
+	if e != nil {
+		// Not found need to be save
+		fmt.Println("Error in apiclient get ", e)
+		return e
+	}
+	if len(result) != 1 {
+		return errors.New("too many result from the non optional value")
+	}
+	data := result[0]
+	//fmt.Println(data)
+	err := MapToObject(data, o)
+	//mt.Print(o)
+	return err
 }
 func GetByNonOptional(o interface{}) error {
 	oValue := reflect.ValueOf(o)
@@ -155,7 +178,7 @@ func GetByNonOptional(o interface{}) error {
 
 }
 
-func GetAll(o interface{}) (i []interface{}) {
+func GetAll(o interface{}) (i []map[string]string) {
 	checkOrSetToken()
 	apiBrut := fmt.Sprint(reflect.TypeOf(o))
 	apiName := strings.ToLower(strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1))
@@ -170,24 +193,13 @@ func GetAll(o interface{}) (i []interface{}) {
 	}
 	if len(result) < 1 {
 		fmt.Println("No result ", e)
-		return
+		return i
 	}
-	for _, res := range result {
-		fmt.Println(res)
-		newO := reflect.New(reflect.TypeOf(o))
-		err := MapToObject(res, newO)
-		if err != nil {
-			i = append(i, newO)
-		} else {
-			fmt.Println(err)
-		}
-	}
-	return i
+	return result
 }
 
 func MapToObject(a map[string]string, o interface{}) error {
 	model := reflect.TypeOf(o)
-	reflect.New(model)
 	oValue := reflect.ValueOf(o)
 	if oValue.Kind() == reflect.Ptr {
 		oValue = oValue.Elem()
@@ -208,6 +220,15 @@ func MapToObject(a map[string]string, o interface{}) error {
 				if tagType == "time" {
 					f, _ := time.Parse("2006-01-02 15:04:05", fieldValue)
 					oValue.Field(i).Set(reflect.ValueOf(f))
+				}
+				if tagType == "struct" {
+					//aa:=model.Elem().Field(i)
+					apiBrut := fmt.Sprint(model.Elem().Field(i).Type)
+					apiName := strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1)
+					if apiName == "Domain" {
+						id, _ := strconv.Atoi(fieldValue)
+						oValue.Field(i).Set(reflect.ValueOf(&Domain{Id: id}))
+					}
 				}
 			}
 		}
@@ -307,3 +328,48 @@ func IsSubStruct(g interface{}) bool {
 	}
 	return false
 }
+func CloneValue(oldObj interface{}) interface{} {
+
+	newObj := reflect.New(reflect.TypeOf(oldObj).Elem())
+	oldVal := reflect.ValueOf(oldObj).Elem()
+	newVal := newObj.Elem()
+	for i := 0; i < oldVal.NumField(); i++ {
+		newValField := newVal.Field(i)
+		if newValField.CanSet() {
+			newValField.Set(oldVal.Field(i))
+		}
+	}
+
+	//dd :=newObj.Interface()
+	return &newObj
+}
+
+/*
+	u := *source
+	user3 := reflect.New(reflect.ValueOf(source).Elem().Type()).Interface().(User)
+
+	oModel := reflect.TypeOf(source)
+	oModelPtr:= reflect.TypeOf(source)
+	if oModel.Kind() == reflect.Ptr {
+		oModel=oModel.Elem()
+	}
+	x := reflect.ValueOf(source)
+	//oType:=reflect.TypeOf(source)
+	if x.Kind() == reflect.Ptr {
+		x=x.Elem()
+	}
+
+	destin:=reflect.New(oModel)
+	fmt.Println(destin)
+	destin=reflect.ValueOf(destin)
+	if destin.Kind() == reflect.Ptr {
+		destin=destin.Elem()
+	}
+	fmt.Println("COPY OF ",destin)
+	for i := 0; i < oModelPtr.Elem().NumField(); i++ {
+		v:=reflect.ValueOf(x.Field(i))
+		fmt.Println( oModel.Field(i).Name,reflect.ValueOf(x.Field(i)))
+		destin.Field(i).Set(v)
+	}
+	return destin
+*/

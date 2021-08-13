@@ -25,3 +25,13 @@ func (o *Domain) LoadOrCreate() error {
 		return nil
 	}
 }
+func (o *Domain) FromMap(a map[string]string) (n *Domain) { MapToObject(a, n); return n }
+func (o *Domain) GetAll() (out []*Domain) {
+	for _, row := range GetAll(o) {
+		a := &Domain{}
+		MapToObject(row, a)
+		out = append(out, a)
+	}
+	return out
+}
+func (o *Domain) Clone() *Domain { out := &Domain{}; return out }

@@ -28,3 +28,13 @@ func (o *Certificate) LoadOrCreate() error {
 		return nil
 	}
 }
+func (o *Certificate) FromMap(a map[string]string) (n *Certificate) { MapToObject(a, n); return n }
+func (o *Certificate) GetAll() (out []*Certificate) {
+	for _, row := range GetAll(o) {
+		a := &Certificate{}
+		MapToObject(row, a)
+		out = append(out, a)
+	}
+	return out
+}
+func (o *Certificate) Clone() *Certificate { out := &Certificate{}; return out }
