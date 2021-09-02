@@ -125,6 +125,31 @@ func GetById(o interface{}) error {
 	//mt.Print(o)
 	return err
 }
+func GetByField(o interface{}, fieldName string, fieldValue string) (i []map[string]string) {
+	oValue := reflect.ValueOf(o)
+	apiBrut := fmt.Sprint(reflect.TypeOf(o))
+	apiName := strings.ToLower(strings.Replace(strings.Replace(apiBrut, "csObject.", "", 1), "*", "", 1))
+
+	if oValue.Kind() == reflect.Ptr {
+		oValue = oValue.Elem()
+	}
+	path := apiName + "/?" + fieldName + "=" + fieldValue
+	fmt.Print(path)
+	//fmt.Println("GET ",apiName,path)
+	result, e := apiClient.Get(path)
+	//fmt.Println(result)
+	if e != nil {
+		// Not found need to be save
+		fmt.Println("Error in apiclient get ", e)
+	}
+
+	if len(result) < 1 {
+		fmt.Println("No result ", e)
+		return i
+	}
+	return result
+}
+
 func GetByNonOptional(o interface{}) error {
 	oValue := reflect.ValueOf(o)
 	oModel := reflect.TypeOf(o)
@@ -255,6 +280,7 @@ func SaveObject(f interface{}) (e error) {
 	body := "[" + jsonString + "]"
 	//fmt.Println(apiName,"POST",body)
 	mapping, err := apiClient.Insert(apiName, body)
+	fmt.Println(body, err)
 	/*id,_:=strconv.Atoi(mapping[0][apiName+"_id"])
 	v:=int64(id)
 	g:=reflect.ValueOf(f)
@@ -268,6 +294,9 @@ func SaveObject(f interface{}) (e error) {
 	}
 	return
 	*/
+	if len(mapping) < 1 {
+		return nil
+	}
 	return MapToObject(mapping[0], f)
 }
 
